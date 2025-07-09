@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include "segTreeSumInterval.cpp"
 using namespace std;
 
 //Fontes: https://cp-algorithms.com/graph/hld.html
@@ -13,21 +14,26 @@ using namespace std;
 //assim, if(head[u]==head[v]) return st.query(pos[v], pos[u]);  (POR EXEMPLO )
 //viraria: if(head[u]==head[v]) return st.query(pos[v]+1, pos[u]); (pois no caminho de v até u nao queremos somar o valor de v (que representa a aresta chegando em v...))
 
+//Permite atualizar e consultar a subárvore de um vértice
+//Permite calcular LCA
+
+//Construcao: O(n)
+//Query: O(log^2 n), Query subtree: O(log n)
+//Update: O(log^2 n), Update subtree: O(log n)
 
 //podemos trabalhar com int, long long ,etc.
 
-typedef int T
+//typedef int T;
 
 class Hld {
 public:
-	//lista de adjacencia (nao direcionada), valor em cada vertice, qual será a raiz da árvore
-	//
-	Hld(vector<vector<int> > &adj, vector<T> &value_, int root=0): st(adj.size()) {
+	//lista de adjacencia (nao direcionada)
+	//adj[a] --> arestas incidentes em a (pares do tipo vertice, peso)
+	Hld(vector<vector<pair<int,int> > > &adj, int root=0): st(adj.size()) {
 
 		ct = 0; //marca os vertices com codigo 0,1,2 ... com base na posicao em que vao ficar na seg tree
 		int n = adj.size();
 		pos = sz = parent = head = depth = vector<int>(n);
-		value = value_;
 
 		vector<int> v(n); //vetor com pesos dos vertices na seg tree..
 		depth[root] = 0; //vamos considerar que a raiz esta na profundidade 0 (opcional)
@@ -42,13 +48,15 @@ public:
 	//assim, a consulta é sempre do pos maior para o menor...
 	T query(int u, int v) { //consulta nos nodos do caminho entre vertices u e v
 		if(pos[u] < pos[v]) swap(u,v); //posicoes sao de cima para baixo...
-		if(head[u]==head[v]) return st.query(pos[v], pos[u]); //estao na mesma chain
+		if(head[u]==head[v]) return st.query(pos[v]+1, pos[u]); //estao na mesma chain
 
 		return  st.query(pos[head[u]],pos[u]) + query(parent[head[u]], v) ; //ATUALIZAR (exemplo: minimo de caminho, maximo de caminho, etc)
 	}
+	//soma valor ao caminho..
  	void updatePath(int u, int v, T valor) {
+ 		if(u==v) return; //se o caminho tem apenas 1 vertice --> nao ha aresta para atualizar...
 		if(pos[u] < pos[v]) swap(u,v); //posicoes sao de cima para baixo...
-		if(head[u]==head[v]) st.update(pos[v], pos[u], valor); //estao na mesma chain
+		if(head[u]==head[v]) st.update(pos[v]+1, pos[u], valor); //estao na mesma chain
 		else {
 		  st.update(pos[head[u]],pos[u], valor); 
 		  updatePath(parent[head[u]], v,valor) ; 
@@ -58,10 +66,13 @@ public:
 
  	//Na dfs, ao processar o nodo u os (sz[u]-1) proximos elementos todos de sua subarvore estarao logo apos ele no vetor v de valores da seg tree
  	T querySubtree(int u) { //consulta na subarvore inteira do nodo u
- 		return st.query(pos[u], pos[u] + sz[u] - 1);
+ 		if(sz[u]==1) return 0; //árvore com 1 vertice nao tem aresta --> peso 0
+ 		return st.query(pos[u]+1, pos[u] + sz[u] - 1);
  	}
+ 	//soma valor a subarvore..
  	void updateSubtree(int u, T valor) {
- 		st.update(pos[u], pos[u] + sz[u] - 1,valor);
+ 		if(sz[u]==1) return;
+ 		st.update(pos[u]+1, pos[u] + sz[u] - 1,valor);
  	}
  	int lca(int u, int v) {
  		if(pos[u] < pos[v]) swap(u,v);
@@ -72,29 +83,32 @@ public:
  	}
 
 private:
-	void dfs(vector<vector<int> > &adj,int root, int prev) {
+	void dfs(vector<vector<pair<int,int>> > &adj,int root, int prev) {
 		sz[root] = 1;
-		for(int &w:adj[root]) if(w!=prev) {
+		for(auto &vizinho:adj[root]) if(vizinho.first!=prev) {
+			auto &[w,peso] = vizinho;
 			depth[w] = depth[root] + 1; //opcional
 			dfs(adj,w,root);
 			sz[root] += sz[w];
-			if(sz[w] > sz[ adj[root][0] ] || adj[root][0]==prev) 
-				swap(adj[root][0],w); //o primeiro filho de cada vértice será sempre o maior (ou seja, terá um heavy edge entre eles)
+			if(sz[w] > sz[ adj[root][0].first ] || adj[root][0].first ==prev) 
+				swap(adj[root][0],vizinho); //o primeiro filho de cada vértice será sempre o maior (ou seja, terá um heavy edge entre eles)
 		}
 	}
-	void build(vector<vector<int> > &adj,vector<T> &v, int &ct, int root, int prev)  {
+	//value = peso das arestas, que ficara na seg tree
+	void build(vector<vector<pair<int,int>> > &adj, vector<int> &value, int &ct, int root, int prev)  {
 		pos[root] = ct;
-		v[ct] = value[root];
+		value[ct] = value[root];
 		ct++;
-		for(int &w:adj[root]) if(w!=prev) { //vizinhos de root (cuidado para nao voltar)
+		for(auto &[w,peso]:adj[root]) if(w!=prev) { //vizinhos de root (cuidado para nao voltar)
+			value[w] = peso;
 			parent[w] = root;
-			head[w] = (w==adj[root][0]?head[root]:w); //cada vertice é cabeca da sua chain. Depois arrumamos isso para os vertices que estiverem no heavy path
-			build(v,ct,w,root);			
+			head[w] = (w==adj[root][0].first?head[root]:w); //cada vertice é cabeca da sua chain. Depois arrumamos isso para os vertices que estiverem no heavy path
+			build(adj, value,ct,w,root);			
 		}
 
 	}
 
-	vector<T> value; //valor armazenado em cada vertice
+	
 
 	int ct;
 
@@ -106,3 +120,25 @@ private:
 
 	SegTree st;
 };
+
+int main() {
+	vector<vector<pair<int,int> > > adj(6);
+	adj[0].push_back(make_pair(1,1)); 
+	adj[0].push_back(make_pair(4,7) );
+	adj[1].push_back(make_pair(0,1)); 
+	adj[1].push_back(make_pair(3,3)); 
+	adj[1].push_back(make_pair(2,4)); 
+	adj[2].push_back(make_pair(1,4) ); 
+	adj[3].push_back(make_pair(1,3) ); 
+	adj[4].push_back(make_pair(5,6)); 
+	adj[4].push_back(make_pair(0,7) );
+	adj[5].push_back(make_pair(4,6) ); 
+	Hld hl(adj);
+	cout << hl.query(0,5) << endl;
+	cout << hl.query(4,5) << endl;
+	cout << hl.query(5,1) << endl;
+	hl.updatePath(2,0,2);
+	cout << hl.query(0,5) << endl;
+	cout << hl.query(4,5) << endl;
+	cout << hl.query(5,1) << endl;
+}

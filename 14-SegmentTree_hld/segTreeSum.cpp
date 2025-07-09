@@ -2,6 +2,9 @@
 #include <vector>
 using namespace std;
 
+//consulta do tipo soma de intervalo
+//permite atualizacao de valores
+
 typedef int T;
 class SegTree {
 public:
