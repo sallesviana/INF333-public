@@ -36,6 +36,7 @@ public:
 		value = value_;
 
 		vector<int> v(n); //vetor com pesos dos vertices na seg tree..
+		head[root] = root;
 		depth[root] = 0; //vamos considerar que a raiz esta na profundidade 0 (opcional)
 		dfs(adj,root,-1);
 		build(adj,v,ct,root,-1); //segunda DFS, após colocar as arestas pesadas como (u, adj[u][0]) 
@@ -50,8 +51,11 @@ public:
 		if(pos[u] < pos[v]) swap(u,v); //posicoes sao de cima para baixo...
 		if(head[u]==head[v]) return st.query(pos[v], pos[u]); //estao na mesma chain
 
-		return  st.query(pos[head[u]],pos[u]) + query(parent[head[u]], v) ; //ATUALIZAR (exemplo: minimo de caminho, maximo de caminho, etc)
+		//ATUALIZAR (exemplo: minimo de caminho, maximo de caminho, etc)
+		//implementacao atual: soma
+		return  st.query(pos[head[u]],pos[u]) + query(parent[head[u]], v) ; 
 	}
+
 	//soma valor aos vertices ao longo do caminho..
  	void updatePath(int u, int v, T valor) {
 		if(pos[u] < pos[v]) swap(u,v); //posicoes sao de cima para baixo...
@@ -80,26 +84,34 @@ public:
  	}
 
 private:
+	//prev = nodo anterior na DFS (pai)
 	void dfs(vector<vector<int> > &adj,int root, int prev) {
 		sz[root] = 1;
-		for(int &w:adj[root]) if(w!=prev) {
+		for(int w:adj[root]) if(w!=prev) {
 			depth[w] = depth[root] + 1; //opcional
 			dfs(adj,w,root);
 			sz[root] += sz[w];
+			//o primeiro filho de cada vértice será sempre o maior 
+			//(ou seja, terá um heavy edge entre eles)
 			if(sz[w] > sz[ adj[root][0] ] || adj[root][0]==prev) 
-				swap(adj[root][0],w); //o primeiro filho de cada vértice será sempre o maior (ou seja, terá um heavy edge entre eles)
+				swap(adj[root][0],w); 
 		}
 	}
-	void build(vector<vector<int> > &adj,vector<T> &v, int &ct, int root, int prev)  {
-		pos[root] = ct;
-		v[ct] = value[root];
+
+	//ct = ordem de visitacao dos vertices (comeca de 0)
+	//value = peso das arestas, que ficara na seg tree
+	void build(vector<vector<int> > &adj,vector<T> &v, 
+		        int &ct, int root, int prev)  {
+		pos[root] = ct; //onde cada vértice está na ordem da DFS?
+		v[ct] = value[root]; //valor de cada vértice (na ordem da dfs)
 		ct++;
-		for(int &w:adj[root]) if(w!=prev) { //vizinhos de root (cuidado para nao voltar)
-			parent[w] = root;
-			head[w] = (w==adj[root][0]?head[root]:w); //cada vertice é cabeca da sua chain. Depois arrumamos isso para os vertices que estiverem no heavy path
+		for(int w:adj[root]) if(w!=prev) { //vizinhos de root (cuidado para nao voltar)
+			parent[w] = root; //pai de cada vértice (para subir)
+			//cada vertice é cabeca da sua chain. 
+			//Depois arrumamos isso para os vertices que estiverem no heavy path
+			head[w] = (w==adj[root][0]?head[root]:w); 
 			build(v,ct,w,root);			
 		}
-
 	}
 
 	vector<T> value; //valor armazenado em cada vertice

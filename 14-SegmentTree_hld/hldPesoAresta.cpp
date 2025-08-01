@@ -36,9 +36,10 @@ public:
 		pos = sz = parent = head = depth = vector<int>(n);
 
 		vector<int> v(n); //vetor com pesos dos vertices na seg tree..
+		head[root] = root;
 		depth[root] = 0; //vamos considerar que a raiz esta na profundidade 0 (opcional)
 		dfs(adj,root,-1);
-		build(adj,v,ct,root,-1); //segunda DFS, após colocar as arestas pesadas como (u, adj[u][0]) 
+		build(adj,v,ct,root,-1,-1); //segunda DFS, após colocar as arestas pesadas como (u, adj[u][0]) 
 		st.build(v); //cria a Seg Tree
 	}
 	//as consultas nas chains sao sempre de cima para baixo
@@ -50,7 +51,9 @@ public:
 		if(pos[u] < pos[v]) swap(u,v); //posicoes sao de cima para baixo...
 		if(head[u]==head[v]) return st.query(pos[v]+1, pos[u]); //estao na mesma chain
 
-		return  st.query(pos[head[u]],pos[u]) + query(parent[head[u]], v) ; //ATUALIZAR (exemplo: minimo de caminho, maximo de caminho, etc)
+		//ATUALIZAR (exemplo: minimo de caminho, maximo de caminho, etc)
+		//implementacao atual: soma
+		return  st.query(pos[head[u]],pos[u]) + query(parent[head[u]], v) ; 
 	}
 	//soma valor ao caminho..
  	void updatePath(int u, int v, T valor) {
@@ -62,6 +65,7 @@ public:
 		  updatePath(parent[head[u]], v,valor) ; 
 		}	
  	}
+ 	
  	//!extra!
 
  	//Na dfs, ao processar o nodo u os (sz[u]-1) proximos elementos todos de sua subarvore estarao logo apos ele no vetor v de valores da seg tree
@@ -94,18 +98,20 @@ private:
 				swap(adj[root][0],vizinho); //o primeiro filho de cada vértice será sempre o maior (ou seja, terá um heavy edge entre eles)
 		}
 	}
+	//ct = ordem de visitacao dos vertices (comeca de 0)
 	//value = peso das arestas, que ficara na seg tree
-	void build(vector<vector<pair<int,int>> > &adj, vector<int> &value, int &ct, int root, int prev)  {
+	void build(vector<vector<pair<int,int>> > &adj, vector<T> &v,
+		       int &ct, int root, int valorAresta, int prev)  {
 		pos[root] = ct;
-		value[ct] = value[root];
+		v[ct] = valorAresta; 
 		ct++;
-		for(auto &[w,peso]:adj[root]) if(w!=prev) { //vizinhos de root (cuidado para nao voltar)
-			value[w] = peso;
+		for(auto &[w,peso]:adj[root]) if(w!=prev) { //vizinhos de root 			
 			parent[w] = root;
-			head[w] = (w==adj[root][0].first?head[root]:w); //cada vertice é cabeca da sua chain. Depois arrumamos isso para os vertices que estiverem no heavy path
-			build(adj, value,ct,w,root);			
+			//cada vertice é cabeca da sua chain. 
+			//Depois arrumamos isso para os vertices que estiverem no heavy path
+			head[w] = (w==adj[root][0].first?head[root]:w); 
+			build(adj, v,ct,w,peso,root);			
 		}
-
 	}
 
 	
