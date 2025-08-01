@@ -35,7 +35,7 @@ public:
 		int n = adj.size();
 		pos = sz = parent = head = depth = vector<int>(n);
 
-		vector<int> v(n); //vetor com pesos dos vertices na seg tree..
+		vector<T> v(n); //vetor com pesos dos vertices na seg tree..
 		head[root] = root;
 		depth[root] = 0; //vamos considerar que a raiz esta na profundidade 0 (opcional)
 		dfs(adj,root,-1);
@@ -126,6 +126,8 @@ private:
 
 	SegTree st;
 };
+
+
 
 int main() {
 	vector<vector<pair<int,int> > > adj(6);

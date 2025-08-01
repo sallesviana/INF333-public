@@ -17,7 +17,7 @@ public:
 		lazy.resize(4*n,0);
 	}
 
-	void build(vector<int> &a, int v, int tl, int tr) {
+	void build(vector<T> &a, int v, int tl, int tr) {
 	    if (tl == tr) {
 	        t[v] = a[tl];
 	    } else {
@@ -28,7 +28,7 @@ public:
 	    }
 	}
 
-	void build(vector<int> &a) {
+	void build(vector<T> &a) {
 		build(a,1,0,mxPos);
 	}
 
@@ -44,7 +44,7 @@ public:
 	    }
 	}
 
-	void update(int v, int tl, int tr, int l, int r, int addend) {
+	void update(int v, int tl, int tr, int l, int r, T addend) {
 	    if (l > r) return;
 	    if (l == tl && tr == r) {
 	        t[v] += addend * (tr - tl + 1);
@@ -63,7 +63,7 @@ public:
 		update(1,0,mxPos,l,r,add);
 	}
 
-	int query(int v, int tl, int tr, int l, int r) {
+	T query(int v, int tl, int tr, int l, int r) {
 	    if (l > r) return 0;
 	    if (l == tl && r == tr) return t[v];
 	    push(v, tl, tr);

@@ -35,7 +35,7 @@ public:
 		pos = sz = parent = head = depth = vector<int>(n);
 		value = value_;
 
-		vector<int> v(n); //vetor com pesos dos vertices na seg tree..
+		vector<T> v(n); //vetor com pesos dos vertices na seg tree..
 		head[root] = root;
 		depth[root] = 0; //vamos considerar que a raiz esta na profundidade 0 (opcional)
 		dfs(adj,root,-1);
@@ -87,7 +87,8 @@ private:
 	//prev = nodo anterior na DFS (pai)
 	void dfs(vector<vector<int> > &adj,int root, int prev) {
 		sz[root] = 1;
-		for(int w:adj[root]) if(w!=prev) {
+		//w TEM que ser por referencia (por causa do swap!!!)
+		for(int &w:adj[root]) if(w!=prev) {
 			depth[w] = depth[root] + 1; //opcional
 			dfs(adj,w,root);
 			sz[root] += sz[w];
@@ -105,12 +106,12 @@ private:
 		pos[root] = ct; //onde cada vértice está na ordem da DFS?
 		v[ct] = value[root]; //valor de cada vértice (na ordem da dfs)
 		ct++;
-		for(int w:adj[root]) if(w!=prev) { //vizinhos de root (cuidado para nao voltar)
+		for(int &w:adj[root]) if(w!=prev) { //vizinhos de root (cuidado para nao voltar)
 			parent[w] = root; //pai de cada vértice (para subir)
 			//cada vertice é cabeca da sua chain. 
 			//Depois arrumamos isso para os vertices que estiverem no heavy path
 			head[w] = (w==adj[root][0]?head[root]:w); 
-			build(v,ct,w,root);			
+			build(adj,v,ct,w,root);			
 		}
 	}
 
