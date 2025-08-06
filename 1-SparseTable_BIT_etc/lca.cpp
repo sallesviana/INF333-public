@@ -30,6 +30,7 @@ template <typename T> class SparseTable {
 
 //LCA usando euler tour
 //fonte: https://usaco.guide/gold/tree-euler?lang=cpp
+//assume que 0 é a raiz...
 class LCA {
   private:
 	const int n;
@@ -66,4 +67,40 @@ class LCA {
 		if (tin[a] > tin[b]) { swap(a, b); }
 		return rmq.query(tin[a], tin[b]).second;
 	}
+
+	void debug() {
+		for(int i=0;i<n;i++) cout << i << " "; cout << endl;
+		for(int i=0;i<n;i++) cout << tin[i] << " "; cout << endl;
+		for(int i=0;i<n;i++) cout << dep[i] << " "; cout << endl;
+
+		cout << endl;
+		for(int i=0;i<et.size();i++) cout << i << " "; cout << endl;
+		for(int i=0;i<et.size();i++) cout << dep[et[i]] << " "; cout << endl;
+		for(int i=0;i<et.size();i++) cout << et[i] << " "; cout << endl;
+
+	}
 };
+
+/*
+Arvore usada na aula:
+9
+-1 5 6 0 0 0 3 6 1*/
+
+
+int main() {
+	int n;
+	cin >> n;
+
+	vector<vector<int> > adj(n);
+	for(int i=0;i<n;i++) { //vetor de pais...
+		int p;
+		cin >> p;
+		if(p==-1) continue;
+		//p--; //contar a partir de 0
+		//pai do i é o p
+		adj[i].push_back(p);
+		adj[p].push_back(i);
+	}
+	LCA e(adj);
+	e.debug(); //para entender a estrutura...
+}
