@@ -21,11 +21,11 @@ public:
 	double valorConsulta() { //adaptar: retorna o valor da consulta da janela atual
 		return ((double)soma)/n;
 	}
-	void add(int idx) { //adiciona o elemento da posicao idx a janela
-		soma += v[idx];
+	void add(int idx) { //adaptar:adiciona o elemento da posicao idx a janela		
+		soma += v[idx];  
 		n++;
 	}
-	void remove(int idx) {
+	void remove(int idx) {//adaptar:remove o elemento da posicao idx da janela
 		soma -= v[idx];
 		n--;
 	}
@@ -74,10 +74,16 @@ int main() {
 		int left = queries[i].l;
 		int right = queries[i].r;
 
-		while (mo_left < left) { janela.remove(mo_left++); }
-		while (mo_left > left) { janela.add(--mo_left); }
-		while (mo_right < right) { janela.add(++mo_right); }
-		while (mo_right > right) { janela.remove(mo_right--); }
+		if(mo_left==-1) { //primeira consulta...
+			for(int i=left;i<=right;i++) janela.add(i);
+			mo_left = left;
+			mo_right = right;
+		} else {
+			while (mo_left < left) { janela.remove(mo_left++); } 
+			while (mo_left > left) { janela.add(--mo_left); }
+			while (mo_right < right) { janela.add(++mo_right); }
+			while (mo_right > right) { janela.remove(mo_right--); }
+		}
 
 		ans[queries[i].idx] =  janela.valorConsulta()  ;   
 	}
