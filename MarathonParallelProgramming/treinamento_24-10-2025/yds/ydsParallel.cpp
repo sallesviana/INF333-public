@@ -132,6 +132,8 @@ vector<interval> yds(vector<job> &jobs2){
 }
 
 int main(){
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
     int n;
     vector<job>jobs;
     
